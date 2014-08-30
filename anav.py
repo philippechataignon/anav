@@ -66,31 +66,23 @@ def mots_from(depart):
             s.add(tri(ch + le)) # ajoute
     return chain(*(anag.get(ch, []) for ch in s))
 
-def cherche(G, debut, fin, max_loop=20, opti=-1):
-    """ Boucle principale
+def expand(G, curr, cible, fin=False):
+    """Etend le graphe depuis curr
 
-    * explore le premier node (debut)
-    * puis lance l'analyse des différents niveaux (maximum max_loop)
-    * et vérifie si on a trouvé une solution
+    Le node curr passe à l'état explore à True
+    On récupère ses voisins et on les ajoute au graphe
+    à l'état explore à False
 
     """
-    # on génère un morceau de graphe par la fin
-    expand(G, fin, fin, fin=True)
-    nodes = list(G.nodes())
-    for n in nodes:
-        expand(G, n, fin, fin=True)
-
-    expand(G, debut, fin)
-    flag = False
-    for level in range(max_loop):
-        analyse(G, fin, opti)
-        if nx.has_path(G, debut, fin):
-            flag = True
-            break
-    # indique les différents chemins
-    if flag :
-        for p in nx.all_shortest_paths(G,source=debut,target=fin):
-            print(p)
+    dist_curr = leven(cible, curr)
+    G.add_node(curr, explore=True, dist=dist_curr, fin=fin)
+    for u in mots_from(curr):
+        if u not in G:
+            dist = leven(cible, u)
+            G.add_node(u, explore=False, dist=dist, fin=fin)
+        else :
+            G.node[u]['fin'] = fin
+        G.add_edge(curr, u)
 
 def analyse(G, fin, opti):
     """ Analyse du graphe
@@ -117,28 +109,33 @@ def analyse(G, fin, opti):
         expand(G, node, fin)
     return False
 
-def expand(G, curr, cible, fin=False):
-    """Etend le graphe depuis curr
+def cherche(G, debut, fin, max_loop=20, opti=-1):
+    """ Boucle principale
 
-    Le node curr passe à l'état explore à True
-    On récupère ses voisins et on les ajoute au graphe
-    à l'état explore à False
+    * explore le premier node (debut)
+    * puis lance l'analyse des différents niveaux (maximum max_loop)
+    * et vérifie si on a trouvé une solution
 
     """
-    dist_curr = leven(cible, curr)
-    G.add_node(curr, explore=True, dist=dist_curr, fin=fin)
-    for u in mots_from(curr):
-        if u not in G:
-            dist = leven(cible, u)
-            G.add_node(u, explore=False, dist=dist, fin=fin)
-        else :
-            G.node[u]['fin'] = fin
-        G.add_edge(curr, u)
+    # on génère un morceau de graphe par la fin
+    expand(G, fin, fin, fin=True)
+    nodes = list(G.nodes())
+    for n in nodes:
+        expand(G, n, fin, fin=True)
+
+    expand(G, debut, fin)
+    flag = False
+    for level in range(max_loop):
+        analyse(G, fin, opti)
+        if nx.has_path(G, debut, fin):
+            flag = True
+            break
+    # indique les différents chemins
+    if flag :
+        for p in nx.all_shortest_paths(G,source=debut,target=fin):
+            print(p)
 
 if __name__ == '__main__':
     ll, anag = lis_mots()
     G = nx.Graph()
-    #cherche(G, 'bebe', 'vieillard', opti=2)
-    #G = nx.Graph()
-    #cherche(G, 'ire', 'zygomatique', opti=2)
     cherche(G, 'maison', 'hypotheque', opti=2)
