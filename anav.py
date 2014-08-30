@@ -134,6 +134,8 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
     if flag :
         for p in nx.all_shortest_paths(G,source=debut,target=fin):
             print(p)
+    else:
+        print("Pas de chemin trouvé")
 
 if __name__ == '__main__':
     ll, anag = lis_mots()
