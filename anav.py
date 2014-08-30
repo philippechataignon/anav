@@ -37,6 +37,20 @@ def tri(s) :
     """ Renvoit le mot trié pour repérage anagramme """
     return "".join(sorted(list(s)))
 
+def lis_mots():
+    print('Début lecture')
+    with open("lmots.txt") as f:
+        ll = [l.strip() for l in f if len(l)]
+    anag = {}
+    for l in ll:
+        tll = tri(l)
+        if tll not in anag:
+            anag[tll] = [l]
+        else:
+            anag[tll].append(l)
+    print('Fin lecture')
+    return ll, anag
+
 def mots_from(depart):
     """renvoie liste des mots depuis depart"""
     ch = tri(depart)
@@ -52,7 +66,7 @@ def mots_from(depart):
         out.extend(anag.get(ch, []))
     return out
 
-def cherche(G, debut, fin, max_loop=20, opti=2):
+def cherche(G, debut, fin, max_loop=20, opti=-1):
     """ Boucle principale
 
     * explore le premier node (debut)
@@ -60,16 +74,27 @@ def cherche(G, debut, fin, max_loop=20, opti=2):
     * et vérifie si on a trouvé une solution
 
     """
+    if opti == -1:
+        expand(G, fin, fin)
+        nodes = list(G.nodes())
+        for n in nodes:
+            expand(G, n, fin)
     expand(G, debut, fin)
+    # si pas optimisation, on génère un morceau de graphe par la fin
     flag = False
     for level in range(max_loop):
-        flag = analyse(G, fin, opti)
-        # si on a trouvé, on sort
-        if flag :
-            break
+        analyse(G, fin, opti)
+        try:
+            sp = list(nx.all_shortest_paths(G,source=debut,target=fin))
+        except (nx.exception.NetworkXNoPath):
+            pass
+        else:
+            if len(sp) > 0 :
+                flag = True
+                break
     # indique les différents chemins
     if flag :
-        for p in nx.all_shortest_paths(G,source=debut,target=fin):
+        for p in sp:
             print(p)
 
 def analyse(G, fin, opti):
@@ -79,10 +104,6 @@ def analyse(G, fin, opti):
     Définit les noeuds à explorer
     Lance leur exploration
     """
-
-    if fin in G :
-        print("Fini : ", fin, "trouvé")
-        return True
 
     # Limite recherches
     # On cherche le min des dist + opti
@@ -118,20 +139,10 @@ def expand(G, curr, fin):
         G.add_edge(curr, u)
 
 if __name__ == '__main__':
-    print('Début lecture')
-    with open("lmots.txt") as f:
-        ll = [l.strip() for l in f if len(l)]
-    anag = {}
-    for l in ll:
-        tll = tri(l)
-        if tll not in anag:
-            anag[tll] = [l]
-        else:
-            anag[tll].append(l)
-    print('Fin lecture')
-    #G = nx.Graph()
-    #cherche(G, 'casse', 'punir', opti=1)
-    #G = nx.Graph()
-    #cherche(G, 'bebe', 'vieillard', opti=1)
+    ll, anag = lis_mots()
     G = nx.Graph()
-    cherche(G, 'coquelicot', 'colchique', opti=-1)
+    #cherche(G, 'bebe', 'vieillard', opti=2)
+    #G = nx.Graph()
+    #cherche(G, 'coquelicot', 'colchique')
+    cherche(G, 'maison', 'hypotheque', opti=2)
+    #cherche(G, 'maison', 'hypotheque')
