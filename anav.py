@@ -43,22 +43,30 @@ def tri(s) :
     return "".join(sorted(list(s)))
 
 def lis_mots():
+    """constitue dictionnaire des anagrammes depuis dico
+
+    Le dictionnaire renvoyé est de la forme :
+        * clé : "mot" constitué des lettres triés
+        * valeur : liste des mots anagrammes
+
+        Exemple : 'aimnos': ['aimons', 'amnios', 'maison']
+    """
     print('Début lecture')
     with open("lmots.txt") as f:
-        ll = [l.strip() for l in f if len(l)]
-    anag = {}
-    for l in ll:
-        tll = tri(l)
-        if tll not in anag:
-            anag[tll] = [l]
-        else:
-            anag[tll].append(l)
+        anag = {}
+        for l in f:
+            l = l.strip()
+            tll = tri(l)
+            if tll not in anag:
+                anag[tll] = [l]
+            else:
+                anag[tll].append(l)
     print('Fin lecture')
-    return ll, anag
+    return anag
 
-def mots_from(depart):
-    """renvoie liste des mots depuis depart"""
-    ch = tri(depart)
+def mots_from(mot):
+    """renvoie la liste des mots relié à mot"""
+    ch = tri(mot)
     s = set()
     for i, l in enumerate(ch) :
         s.add(ch[:i] + ch[i+1:]) # enlève letters
@@ -99,16 +107,16 @@ def analyse(G, fin, opti):
     min_dist = None
     if opti >= 0 :
         min_dist = min([G.node[n]['dist'] for n in G if G.node[n]['atteint']])
+        # les nodes trop lointains sont considérés comme déjà explorés
         for n in G:
             if G.node[n]['dist'] > min_dist + opti :
                 G.node[n]['explore'] = True
 
-    # liste des nodes non explorés
-    nodes = list([n for n in G if not G.node[n]['explore']])
+    # constition de la liste des nodes non explorés, donc à explorer
+    nodes = [n for n in G if not G.node[n]['explore']]
     print('Analyse : ', len(nodes), 'nouveaux nodes à explorer - Distance mini :', min_dist)
     for node in nodes :
         expand(G, node, fin)
-    return False
 
 def cherche(G, debut, fin, max_loop=20, opti=-1):
     """ Boucle principale
@@ -124,10 +132,13 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
     for n in nodes:
         expand(G, n, fin, atteint=False, explore=True)
 
+    # on génère le début du graphe
     expand(G, debut, fin)
     flag = False
+    # puis on élargit progressivement l'analyse et la constitution du graphe
     for level in range(max_loop):
         analyse(G, fin, opti)
+        # s'il y a un chemin, on sort
         if nx.has_path(G, debut, fin):
             flag = True
             break
@@ -139,7 +150,8 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
         print("Pas de chemin trouvé")
 
 if __name__ == '__main__':
-    ll, anag = lis_mots()
+    anag = lis_mots()
     G = nx.Graph()
     cherche(G, 'maison', 'hypotheque', opti=2)
-    #cherche(G, 'boite', 'macon', opti=2)
+    ##cherche(G, 'toiture', 'abricot', opti=2)
+    ##cherche(G, 'boite', 'macon', opti=2)
