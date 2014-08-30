@@ -4,6 +4,8 @@
 from __future__ import division, print_function, absolute_import
 import networkx as nx
 
+letters = list('abcdefghijklmnopqrstuvwxyz')
+
 def leven(word1,word2):
     d = []
     for i in range(len(word1)+1):
@@ -30,10 +32,21 @@ def leven(word1,word2):
 def tri(s) :
     return "".join(sorted(list(s)))
 
-def mots_from(ll, depart):
+def mots_from_org(ll, depart):
     """renvoie liste des mots depuis depart"""
     tri_depart = tri(depart)
     return [l for l in ll if (leven(depart, l) == 1 or tri(l) == tri_depart) and l != depart]
+
+def mots_from(ll, depart):
+    """renvoie liste des mots depuis depart"""
+    ch = tri(depart)
+    s = set()
+    for i, l in enumerate(ch) :
+        s.add(ch[:i] + ch[i+1:]) # enlève letters
+        for le in letters :
+            s.add(tri(ch[:i] + le + ch[i+1:])) # substitue
+            s.add(tri(ch + le)) # ajoute
+    return [l for l in ll if tri(l) in s and l != depart]
 
 def cherche(G, ll, debut, fin):
     expand(G, ll, debut, fin)
@@ -85,3 +98,4 @@ if __name__ == '__main__':
     cherche(G, ll, 'mot', 'zeste')
     #nx.draw(G)
     #plt.show()
+    #print(mots_from(ll, 'test'))
