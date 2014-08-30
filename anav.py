@@ -71,7 +71,7 @@ def explo(G, ll, fin):
     min_dist = min([G.node[n]['dist'] for n in G])
     print ('min_dist=', min_dist)
     for n in G:
-        if G.node[n]['dist'] > min_dist :
+        if G.node[n]['dist'] > min_dist + 1:
             G.node[n]['explore'] = True
 
     nodes = list([n for n in G if not G.node[n]['explore']])
@@ -93,9 +93,9 @@ def expand(G, ll, curr, fin):
 if __name__ == '__main__':
     #import matplotlib.pyplot as plt
     with open("lmots.txt") as f:
-        ll = [l.strip() for l in f if len(l) < 7]
+        ll = [l.strip() for l in f if len(l) < 12]
     G = nx.Graph()
-    cherche(G, ll, 'mot', 'zeste')
+    cherche(G, ll, 'adherence', 'coquille')
     #nx.draw(G)
     #plt.show()
     #print(mots_from(ll, 'test'))
