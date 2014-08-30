@@ -8,6 +8,9 @@ import networkx as nx
 letters = list('abcdefghijklmnopqrstuvwxyz')
 
 def leven(word1,word2):
+    """Calcul de la distance de Levenshtein entre 2 mots"""
+    word1 = tri(word1)
+    word2 = tri(word2)
     d = []
     for i in range(len(word1)+1):
         d.append([])
@@ -31,12 +34,8 @@ def leven(word1,word2):
     return d[-1][-1]
 
 def tri(s) :
+    """ Renvoit le mot trié pour repérage anagramme """
     return "".join(sorted(list(s)))
-
-def mots_from_org(ll, depart):
-    """renvoie liste des mots depuis depart"""
-    tri_depart = tri(depart)
-    return [l for l in ll if (leven(depart, l) == 1 or tri(l) == tri_depart) and l != depart]
 
 def mots_from(depart):
     """renvoie liste des mots depuis depart"""
@@ -47,46 +46,49 @@ def mots_from(depart):
         for le in letters :
             s.add(tri(ch[:i] + le + ch[i+1:])) # substitue
             s.add(tri(ch + le)) # ajoute
-    #return [l for l in ll if tri(l) in s and l != depart]
     #return chain(anag.get(ch, []) for ch in s)
     out = []
     for ch in s :
         out.extend(anag.get(ch, []))
     return out
 
-def cherche(G, ll, debut, fin):
-    expand(G, ll, debut, fin)
+def cherche(G, debut, fin, max_loop=20, opti=2):
+    """ Boucle principale """
+    expand(G, debut, fin)
     flag = False
-    for level in range(20):
-        flag = explo(G, ll, fin)
+    for level in range(max_loop):
+        flag = explo(G, fin, opti)
+        # si on a trouvé, on sort
         if flag :
             break
+    # indique les différents chemins
     if flag :
         for p in nx.all_shortest_paths(G,source=debut,target=fin):
             print(p)
 
-
-def explo(G, ll, fin):
+def explo(G, fin, opti):
     if fin in G :
         print("Fini : ", fin, "trouvé")
         return True
 
     # Limite recherches
-    # On cherche le min des dist
+    # On cherche le min des dist + opti
 
-    min_dist = min([G.node[n]['dist'] for n in G])
-    print ('min_dist=', min_dist)
-    for n in G:
-        if G.node[n]['dist'] > min_dist + 1:
-            G.node[n]['explore'] = True
+    if opti >= 0 :
+        min_dist = min([G.node[n]['dist'] for n in G])
+        print ('min_dist=', min_dist)
+        for n in G:
+            if G.node[n]['dist'] > min_dist + opti:
+                G.node[n]['explore'] = True
 
+    # liste des nodes non explorés
     nodes = list([n for n in G if not G.node[n]['explore']])
     print('Explo', sorted(nodes))
     for node in nodes :
-        expand(G, ll, node, fin)
+        expand(G, node, fin)
     return False
 
-def expand(G, ll, curr, fin):
+def expand(G, curr, fin):
     """Etend le graphe depuis curr"""
     dist_curr = leven(fin, curr)
     G.add_node(curr, explore=True, dist=dist_curr)
@@ -97,10 +99,9 @@ def expand(G, ll, curr, fin):
         G.add_edge(curr, u)
 
 if __name__ == '__main__':
-    #import matplotlib.pyplot as plt
     print('Début lecture')
     with open("lmots.txt") as f:
-        ll = [l.strip() for l in f if len(l) < 12]
+        ll = [l.strip() for l in f if len(l)]
     anag = {}
     for l in ll:
         tll = tri(l)
@@ -110,8 +111,6 @@ if __name__ == '__main__':
             anag[tll].append(l)
     print('Fin lecture')
     G = nx.Graph()
-    cherche(G, ll, 'a', 'alphabet')
-
-    #nx.draw(G)
-    #plt.show()
-    #print(list(mots_from(anag, 'test')))
+    cherche(G, 'casse', 'punir', opti=0)
+    #cherche(G, 'bebe', 'vieillard')
+    #cherche(G, 'mot', 'zeste')
