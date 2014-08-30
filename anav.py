@@ -46,7 +46,15 @@ def explo(G, ll, fin):
     if fin in G :
         print("Fini : ", fin, "trouvé")
         return True
-    nodes = list([n for n in G.nodes() if not G.node[n]['explore']])
+
+    # Limite recherches
+    # On cherche le min des dist
+
+    min_dist = min([G.node[n]['dist'] for n in G])
+    for n in G:
+        if G.node[n]['dist'] > min_dist + 1 :
+            G.node[n]['explore'] = True
+    nodes = list([n for n in G if not G.node[n]['explore']])
     print('Explo', sorted(nodes))
     for node in nodes :
         expand(G, ll, node, fin)
@@ -59,11 +67,7 @@ def expand(G, ll, curr, fin):
     for u in mots_from(ll, curr):
         if u not in G:
             dist = leven(fin, u)
-            # si dist trop importante, on explorera pas
-            if dist > dist_curr :
-                G.add_node(u, explore=True, dist=dist)
-            else:
-                G.add_node(u, explore=False, dist=dist)
+            G.add_node(u, explore=False, dist=dist)
         G.add_edge(curr, u)
 
 if __name__ == '__main__':
