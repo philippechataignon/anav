@@ -37,10 +37,13 @@ def mots_from(ll, depart):
 
 def cherche(G, ll, debut, fin):
     expand(G, ll, debut, fin)
+    flag = False
     for level in range(8):
         flag = explo(G, ll, fin)
         if flag :
             break
+    if flag :
+        print(nx.shortest_path(G,source=debut,target=fin))
 
 def explo(G, ll, fin):
     if fin in G :
