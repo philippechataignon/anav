@@ -35,16 +35,24 @@ def mots_from(ll, depart):
     tri_depart = tri(depart)
     return [l for l in ll if (leven(depart, l) == 1 or tri(l) == tri_depart) and l != depart]
 
-def cherche(G, ll, curr, fin):
-    expand(G, ll, curr, fin)
-    print(sorted(G.nodes()))
-    print(sorted(G.neighbors(curr)))
+def cherche(G, ll, debut, fin):
+    expand(G, ll, debut, fin)
+    for level in range(3):
+        explo(G, ll, fin)
+
+def explo(G, ll, fin):
+    nodes = list(G.nodes())
+    print('Explo', nodes)
+    for node in nodes :
+        if not G.node[node]['explore']:
+            expand(G, ll, node, fin)
 
 def expand(G, ll, curr, fin):
     """Etend le graphe depuis curr"""
-    G.add_node(curr, explore=True, dist=leven(fin, l))
+    G.add_node(curr, explore=True, dist=leven(fin, curr))
     for u in mots_from(ll, curr):
-        G.add_node(u, dist=leven(fin, l))
+        if u not in G:
+            G.add_node(u, explore=False, dist=leven(fin, u))
         G.add_edge(curr, u)
 
 if __name__ == '__main__':
@@ -52,7 +60,6 @@ if __name__ == '__main__':
     with open("lmots.txt") as f:
         ll = [l.strip() for l in f if len(l) < 6]
     G = nx.Graph()
-    cherche(G, ll, 'met', 'zeste')
+    cherche(G, ll, 'mot', 'zeste')
     #nx.draw(G)
     #plt.show()
-    #print(leven('mot', 'leven'))
