@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division, print_function, absolute_import
+from itertools import chain
 import networkx as nx
 
 letters = list('abcdefghijklmnopqrstuvwxyz')
@@ -37,7 +38,7 @@ def mots_from_org(ll, depart):
     tri_depart = tri(depart)
     return [l for l in ll if (leven(depart, l) == 1 or tri(l) == tri_depart) and l != depart]
 
-def mots_from(ll, depart):
+def mots_from(depart):
     """renvoie liste des mots depuis depart"""
     ch = tri(depart)
     s = set()
@@ -46,12 +47,17 @@ def mots_from(ll, depart):
         for le in letters :
             s.add(tri(ch[:i] + le + ch[i+1:])) # substitue
             s.add(tri(ch + le)) # ajoute
-    return [l for l in ll if tri(l) in s and l != depart]
+    #return [l for l in ll if tri(l) in s and l != depart]
+    #return chain(anag.get(ch, []) for ch in s)
+    out = []
+    for ch in s :
+        out.extend(anag.get(ch, []))
+    return out
 
 def cherche(G, ll, debut, fin):
     expand(G, ll, debut, fin)
     flag = False
-    for level in range(8):
+    for level in range(20):
         flag = explo(G, ll, fin)
         if flag :
             break
@@ -84,7 +90,7 @@ def expand(G, ll, curr, fin):
     """Etend le graphe depuis curr"""
     dist_curr = leven(fin, curr)
     G.add_node(curr, explore=True, dist=dist_curr)
-    for u in mots_from(ll, curr):
+    for u in mots_from(curr):
         if u not in G:
             dist = leven(fin, u)
             G.add_node(u, explore=False, dist=dist)
@@ -92,10 +98,20 @@ def expand(G, ll, curr, fin):
 
 if __name__ == '__main__':
     #import matplotlib.pyplot as plt
+    print('Début lecture')
     with open("lmots.txt") as f:
         ll = [l.strip() for l in f if len(l) < 12]
+    anag = {}
+    for l in ll:
+        tll = tri(l)
+        if tll not in anag:
+            anag[tll] = [l]
+        else:
+            anag[tll].append(l)
+    print('Fin lecture')
     G = nx.Graph()
-    cherche(G, ll, 'adherence', 'coquille')
+    cherche(G, ll, 'a', 'alphabet')
+
     #nx.draw(G)
     #plt.show()
-    #print(mots_from(ll, 'test'))
+    #print(list(mots_from(anag, 'test')))
