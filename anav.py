@@ -7,6 +7,10 @@ import networkx as nx
 
 letters = list('abcdefghijklmnopqrstuvwxyz')
 
+def out(G):
+    for n in sorted(G) :
+        print(n, G.node[n])
+
 def leven(word1,word2):
     """Calcul de la distance de Levenshtein entre 2 mots"""
     word1 = tri(word1)
@@ -74,27 +78,22 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
     * et vérifie si on a trouvé une solution
 
     """
-    if opti == -1:
-        expand(G, fin, fin)
-        nodes = list(G.nodes())
-        for n in nodes:
-            expand(G, n, fin)
+    # on génère un morceau de graphe par la fin
+    expand(G, fin, fin, fin=True)
+    nodes = list(G.nodes())
+    for n in nodes:
+        expand(G, n, fin, fin=True)
+
     expand(G, debut, fin)
-    # si pas optimisation, on génère un morceau de graphe par la fin
     flag = False
     for level in range(max_loop):
         analyse(G, fin, opti)
-        try:
-            sp = list(nx.all_shortest_paths(G,source=debut,target=fin))
-        except (nx.exception.NetworkXNoPath):
-            pass
-        else:
-            if len(sp) > 0 :
-                flag = True
-                break
+        if nx.has_path(G, debut, fin):
+            flag = True
+            break
     # indique les différents chemins
     if flag :
-        for p in sp:
+        for p in nx.all_shortest_paths(G,source=debut,target=fin):
             print(p)
 
 def analyse(G, fin, opti):
@@ -110,9 +109,9 @@ def analyse(G, fin, opti):
 
     min_dist = None
     if opti >= 0 :
-        min_dist = min([G.node[n]['dist'] for n in G])
+        min_dist = min([G.node[n]['dist'] for n in G if not G.node[n]['fin']])
         for n in G:
-            if G.node[n]['dist'] > min_dist + opti:
+            if G.node[n]['dist'] > min_dist + opti or G.node[n]['fin'] :
                 G.node[n]['explore'] = True
 
     # liste des nodes non explorés
@@ -122,7 +121,7 @@ def analyse(G, fin, opti):
         expand(G, node, fin)
     return False
 
-def expand(G, curr, fin):
+def expand(G, curr, cible, fin=False):
     """Etend le graphe depuis curr
 
     Le node curr passe à l'état explore à True
@@ -130,12 +129,14 @@ def expand(G, curr, fin):
     à l'état explore à False
 
     """
-    dist_curr = leven(fin, curr)
-    G.add_node(curr, explore=True, dist=dist_curr)
+    dist_curr = leven(cible, curr)
+    G.add_node(curr, explore=True, dist=dist_curr, fin=fin)
     for u in mots_from(curr):
         if u not in G:
-            dist = leven(fin, u)
-            G.add_node(u, explore=False, dist=dist)
+            dist = leven(cible, u)
+            G.add_node(u, explore=False, dist=dist, fin=fin)
+        else :
+            G.node[u]['fin'] = fin
         G.add_edge(curr, u)
 
 if __name__ == '__main__':
@@ -143,6 +144,5 @@ if __name__ == '__main__':
     G = nx.Graph()
     #cherche(G, 'bebe', 'vieillard', opti=2)
     #G = nx.Graph()
-    #cherche(G, 'coquelicot', 'colchique')
-    cherche(G, 'maison', 'hypotheque', opti=2)
-    #cherche(G, 'maison', 'hypotheque')
+    cherche(G, 'ire', 'zygomatique', opti=2)
+    #cherche(G, 'maison', 'igloo')
