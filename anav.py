@@ -43,7 +43,9 @@ def cherche(G, ll, debut, fin):
         if flag :
             break
     if flag :
-        print(nx.shortest_path(G,source=debut,target=fin))
+        for p in nx.all_shortest_paths(G,source=debut,target=fin):
+            print(p)
+
 
 def explo(G, ll, fin):
     if fin in G :
@@ -54,9 +56,11 @@ def explo(G, ll, fin):
     # On cherche le min des dist
 
     min_dist = min([G.node[n]['dist'] for n in G])
+    print ('min_dist=', min_dist)
     for n in G:
-        if G.node[n]['dist'] > min_dist + 1 :
+        if G.node[n]['dist'] > min_dist :
             G.node[n]['explore'] = True
+
     nodes = list([n for n in G if not G.node[n]['explore']])
     print('Explo', sorted(nodes))
     for node in nodes :
