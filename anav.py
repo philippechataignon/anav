@@ -64,11 +64,7 @@ def mots_from(depart):
         for le in letters :
             s.add(tri(ch[:i] + le + ch[i+1:])) # substitue
             s.add(tri(ch + le)) # ajoute
-    #return chain(anag.get(ch, []) for ch in s)
-    out = []
-    for ch in s :
-        out.extend(anag.get(ch, []))
-    return out
+    return chain(*(anag.get(ch, []) for ch in s))
 
 def cherche(G, debut, fin, max_loop=20, opti=-1):
     """ Boucle principale
@@ -144,5 +140,5 @@ if __name__ == '__main__':
     G = nx.Graph()
     #cherche(G, 'bebe', 'vieillard', opti=2)
     #G = nx.Graph()
-    cherche(G, 'ire', 'zygomatique', opti=2)
-    #cherche(G, 'maison', 'igloo')
+    #cherche(G, 'ire', 'zygomatique', opti=2)
+    cherche(G, 'maison', 'hypotheque', opti=2)
