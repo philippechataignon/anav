@@ -66,7 +66,7 @@ def mots_from(depart):
             s.add(tri(ch + le)) # ajoute
     return chain(*(anag.get(ch, []) for ch in s))
 
-def expand(G, curr, cible, fin=False):
+def expand(G, curr, cible, atteint=True, explore=False):
     """Etend le graphe depuis curr
 
     Le node curr passe à l'état explore à True
@@ -75,13 +75,13 @@ def expand(G, curr, cible, fin=False):
 
     """
     dist_curr = leven(cible, curr)
-    G.add_node(curr, explore=True, dist=dist_curr, fin=fin)
+    G.add_node(curr, explore=True, dist=dist_curr, atteint=atteint)
     for u in mots_from(curr):
         if u not in G:
             dist = leven(cible, u)
-            G.add_node(u, explore=False, dist=dist, fin=fin)
+            G.add_node(u, explore=explore, dist=dist, atteint=atteint)
         else :
-            G.node[u]['fin'] = fin
+            G.node[u]['atteint'] = atteint
         G.add_edge(curr, u)
 
 def analyse(G, fin, opti):
@@ -97,9 +97,9 @@ def analyse(G, fin, opti):
 
     min_dist = None
     if opti >= 0 :
-        min_dist = min([G.node[n]['dist'] for n in G if not G.node[n]['fin']])
+        min_dist = min([G.node[n]['dist'] for n in G if G.node[n]['atteint']])
         for n in G:
-            if G.node[n]['dist'] > min_dist + opti or G.node[n]['fin'] :
+            if G.node[n]['dist'] > min_dist + opti :
                 G.node[n]['explore'] = True
 
     # liste des nodes non explorés
@@ -118,10 +118,10 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
 
     """
     # on génère un morceau de graphe par la fin
-    expand(G, fin, fin, fin=True)
+    expand(G, fin, fin, atteint=False, explore=True)
     nodes = list(G.nodes())
     for n in nodes:
-        expand(G, n, fin, fin=True)
+        expand(G, n, fin, atteint=False, explore=True)
 
     expand(G, debut, fin)
     flag = False
@@ -139,3 +139,4 @@ if __name__ == '__main__':
     ll, anag = lis_mots()
     G = nx.Graph()
     cherche(G, 'maison', 'hypotheque', opti=2)
+    #cherche(G, 'boite', 'macon', opti=2)
