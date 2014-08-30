@@ -5,6 +5,7 @@ from __future__ import division, print_function, absolute_import
 import string
 from itertools import chain
 import networkx as nx
+import json
 
 letters = list(string.ascii_lowercase)
 
@@ -42,7 +43,7 @@ def tri(s) :
     """ Renvoit le mot trié pour repérage anagramme """
     return "".join(sorted(list(s)))
 
-def lis_mots():
+def cree_dico():
     """constitue dictionnaire des anagrammes depuis dico
 
     Le dictionnaire renvoyé est de la forme :
@@ -61,6 +62,16 @@ def lis_mots():
                 anag[tll] = [l]
             else:
                 anag[tll].append(l)
+    print('Fin lecture')
+
+    with open("dico.json", "w") as f:
+        json.dump(anag, f)
+    return anag
+
+def lis_mots():
+    print('Début lecture')
+    with open("dico.json") as f:
+        anag = json.load(f)
     print('Fin lecture')
     return anag
 
@@ -150,8 +161,9 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
         print("Pas de chemin trouvé")
 
 if __name__ == '__main__':
+    #cree_dico()
     anag = lis_mots()
     G = nx.Graph()
-    cherche(G, 'maison', 'hypotheque', opti=2)
-    ##cherche(G, 'toiture', 'abricot', opti=2)
-    ##cherche(G, 'boite', 'macon', opti=2)
+    cherche(G, 'toilette', 'lit', opti=2)
+    ###cherche(G, 'toiture', 'abricot', opti=2)
+    ###cherche(G, 'boite', 'macon', opti=2)
