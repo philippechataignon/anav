@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division, print_function, absolute_import
+import string
 from itertools import chain
 import networkx as nx
 
-letters = list('abcdefghijklmnopqrstuvwxyz')
+letters = list(string.ascii_lowercase)
 
 def out(G):
     for n in sorted(G) :
