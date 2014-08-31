@@ -15,8 +15,8 @@ def out(G):
 
 def leven(word1,word2):
     """Calcul de la distance de Levenshtein entre 2 mots"""
-    word1 = tri(word1)
-    word2 = tri(word2)
+    #word1 = tri(word1)
+    #word2 = tri(word2)
     d = []
     for i in range(len(word1)+1):
         d.append([])
@@ -44,7 +44,7 @@ def tri(s) :
     return "".join(sorted(list(s)))
 
 def cree_dico():
-    """constitue dictionnaire des anagrammes depuis dico
+    """constitue dictionnaire des anagrammes depuis liste des mots
 
     Le dictionnaire renvoyé est de la forme :
         * clé : "mot" constitué des lettres triés
@@ -68,23 +68,30 @@ def cree_dico():
         json.dump(anag, f)
     return anag
 
-def lis_mots():
+def lis_mots_anag():
     print('Début lecture')
     with open("dico.json") as f:
         anag = json.load(f)
     print('Fin lecture')
     return anag
 
+def lis_mots_mot():
+    with open("lmots.txt") as f:
+        anag = set([l.strip() for l in f])
+    return anag
+
+lis_mots = lis_mots_mot
+
 def mots_from(mot):
     """renvoie la liste des mots relié à mot"""
-    ch = tri(mot)
+    ch = mot
     s = set()
     for i, l in enumerate(ch) :
         s.add(ch[:i] + ch[i+1:]) # enlève letters
         for le in letters :
-            s.add(tri(ch[:i] + le + ch[i+1:])) # substitue
-            s.add(tri(ch + le)) # ajoute
-    return chain(*(anag.get(ch, []) for ch in s))
+            s.add(ch[:i] + le + ch[i+1:]) # substitue
+            s.add(ch + le) # ajoute
+    return [mot for mot in s if mot in anag]
 
 def expand(G, curr, cible, atteint=True, explore=False):
     """Etend le graphe depuis curr
@@ -164,6 +171,6 @@ if __name__ == '__main__':
     #cree_dico()
     anag = lis_mots()
     G = nx.Graph()
-    cherche(G, 'toilette', 'lit', opti=2)
-    ###cherche(G, 'toiture', 'abricot', opti=2)
-    ###cherche(G, 'boite', 'macon', opti=2)
+    #cherche(G, 'toilette', 'lit', opti=2)
+    #cherche(G, 'toiture', 'abricot')
+    cherche(G, 'boite', 'macon', opti=2)
