@@ -5,7 +5,7 @@ from __future__ import division, print_function, absolute_import
 import string
 from itertools import chain
 import networkx as nx
-import json
+import cPickle as pickle
 
 letters = list(string.ascii_lowercase)
 
@@ -53,7 +53,7 @@ def cree_dico():
         Exemple : 'aimnos': ['aimons', 'amnios', 'maison']
     """
     print('Début lecture')
-    with open("lmots.txt") as f:
+    with open("gut.txt") as f:
         anag = {}
         for l in f:
             l = l.strip()
@@ -64,14 +64,14 @@ def cree_dico():
                 anag[tll].append(l)
     print('Fin lecture')
 
-    with open("dico.json", "w") as f:
-        json.dump(anag, f)
+    with open("gut.pickle", "w") as f:
+        pickle.dump(anag, f)
     return anag
 
 def lis_mots():
     print('Début lecture')
-    with open("dico.json") as f:
-        anag = json.load(f)
+    with open("gut.pickle") as f:
+        anag = pickle.load(f)
     print('Fin lecture')
     return anag
 
@@ -161,9 +161,9 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
         print("Pas de chemin trouvé")
 
 if __name__ == '__main__':
-    #cree_dico()
-    anag = lis_mots()
+    anag = cree_dico()
+    #anag = lis_mots()
     G = nx.Graph()
-    cherche(G, 'toilette', 'lit', opti=2)
+    cherche(G, 'ire', 'hydrotherapique')
     ###cherche(G, 'toiture', 'abricot', opti=2)
     ###cherche(G, 'boite', 'macon', opti=2)
