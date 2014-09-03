@@ -4,8 +4,10 @@
 from __future__ import division, print_function, absolute_import
 import string
 from itertools import chain
-import networkx as nx
+#import networkx as nx
+import igraph as ig
 import cPickle as pickle
+import Levenshtein
 
 letters = list(string.ascii_lowercase)
 
@@ -13,7 +15,14 @@ def out(G):
     for n in sorted(G) :
         print(n, G.node[n])
 
+
 def leven(word1,word2):
+    """Calcul de la distance de Levenshtein entre 2 mots"""
+    word1 = tri(word1)
+    word2 = tri(word2)
+    return Levenshtein.distance(word1, word2)
+
+def leven_org(word1,word2):
     """Calcul de la distance de Levenshtein entre 2 mots"""
     word1 = tri(word1)
     word2 = tri(word2)
@@ -43,7 +52,14 @@ def tri(s) :
     """ Renvoit le mot trié pour repérage anagramme """
     return "".join(sorted(list(s)))
 
-def cree_dico():
+def liste_mots(infile):
+    """renvoit la liste des mots (iterateur)"""
+    with open(infile) as f:
+        for l in f:
+            l = l.strip()
+            yield l
+
+def cree_anag(infile, outfile):
     """constitue dictionnaire des anagrammes depuis dico
 
     Le dictionnaire renvoyé est de la forme :
@@ -53,7 +69,7 @@ def cree_dico():
         Exemple : 'aimnos': ['aimons', 'amnios', 'maison']
     """
     print('Début lecture')
-    with open("gut.txt") as f:
+    with open(infile) as f:
         anag = {}
         for l in f:
             l = l.strip()
@@ -64,13 +80,13 @@ def cree_dico():
                 anag[tll].append(l)
     print('Fin lecture')
 
-    with open("gut.pickle", "w") as f:
+    with open(outfile, "w") as f:
         pickle.dump(anag, f)
     return anag
 
-def lis_mots():
+def lis_anag(infile):
     print('Début lecture')
-    with open("gut.pickle") as f:
+    with open(infile) as f:
         anag = pickle.load(f)
     print('Fin lecture')
     return anag
@@ -94,17 +110,20 @@ def expand(G, curr, cible, atteint=True, explore=False):
     à l'état explore à False
 
     """
-    dist_curr = leven(cible, curr)
-    G.add_node(curr, explore=True, dist=dist_curr, atteint=atteint)
-    for u in mots_from(curr):
-        if u not in G:
-            dist = leven(cible, u)
-            G.add_node(u, explore=explore, dist=dist, atteint=atteint)
-        else :
-            G.node[u]['atteint'] = atteint
-        G.add_edge(curr, u)
+    #n = G.vs.find(name=curr)
+    print(curr)
+    curr["dist"] = leven(curr['name'], cible['name'])
+    curr["atteint"] = True
+    curr["explore"] = True
 
-def analyse(G, fin, opti):
+    for u in mots_from(curr['name']):
+        nu = G.vs.find(name=u)
+        if not nu['atteint'] :
+            nu['dist'] = leven(cible['name'], u)
+        nu['atteint'] = atteint
+        G.add_edge(curr, nu)
+
+def analyse(G, fin, opti=-1):
     """ Analyse du graphe
 
     Teste si on a une solution
@@ -124,12 +143,13 @@ def analyse(G, fin, opti):
                 G.node[n]['explore'] = True
 
     # constition de la liste des nodes non explorés, donc à explorer
-    nodes = [n for n in G if not G.node[n]['explore']]
-    print('Analyse : ', len(nodes), 'nouveaux nodes à explorer - Distance mini :', min_dist)
-    for node in nodes :
+    #nodes = [n for n in G if not G.node[n]['explore']]
+    new_nodes = G.vs.select(atteint=True).select(explore=False)
+    print('Analyse : ', len(new_nodes), 'nouveaux nodes à explorer - Distance mini :', min_dist)
+    for node in new_nodes :
         expand(G, node, fin)
 
-def cherche(G, debut, fin, max_loop=20, opti=-1):
+def cherche(debut, fin, max_loop=20, opti=-1):
     """ Boucle principale
 
     * explore le premier node (debut)
@@ -137,33 +157,44 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
     * et vérifie si on a trouvé une solution
 
     """
-    # on génère un morceau de graphe par la fin
-    expand(G, fin, fin, atteint=False, explore=True)
-    nodes = list(G.nodes())
-    for n in nodes:
-        expand(G, n, fin, atteint=False, explore=True)
+    G = ig.Graph()
+    G.add_vertices(400000)
+    G.vs['explore'] = False
+    G.vs['atteint'] = False
+    for i, m in enumerate(liste_mots("lmots.txt")):
+        G.vs[i]["name"] = m
+    #G.vs['name'] = liste_mots("lmots.txt")
+    print(G)
+    ## on génère un morceau de graphe par la fin
+    #expand(G, fin, fin, atteint=False, explore=True)
+    #nodes = list(G.nodes())
+    #for n in nodes:
+    #    expand(G, n, fin, atteint=False, explore=True)
 
-    # on génère le début du graphe
-    expand(G, debut, fin)
+    ## on génère le début du graphe
+    #print(G.vs.find(debut))
+    ndebut = G.vs.find(debut)
+    nfin   = G.vs.find(fin)
+    expand(G, ndebut, nfin)
     flag = False
     # puis on élargit progressivement l'analyse et la constitution du graphe
     for level in range(max_loop):
-        analyse(G, fin, opti)
+        analyse(G, nfin, opti)
         # s'il y a un chemin, on sort
-        if nx.has_path(G, debut, fin):
-            flag = True
-            break
+        # TODO
+        #if nx.has_path(G, debut, fin):
+        #    flag = True
+        #    break
     # indique les différents chemins
-    if flag :
-        for p in nx.all_shortest_paths(G,source=debut,target=fin):
-            print(p)
-    else:
-        print("Pas de chemin trouvé")
+    # TODO
+    #if flag :
+    #    for p in nx.all_shortest_paths(G,source=debut,target=fin):
+    #        print(p)
+    #else:
+    #    print("Pas de chemin trouvé")
 
 if __name__ == '__main__':
-    anag = cree_dico()
-    #anag = lis_mots()
-    G = nx.Graph()
-    cherche(G, 'ire', 'hydrotherapique')
+    #cherche(G, 'ire', 'hydrotherapique')
     ###cherche(G, 'toiture', 'abricot', opti=2)
-    ###cherche(G, 'boite', 'macon', opti=2)
+    anag = cree_anag("lmots.txt", "lmots.pickle")
+    cherche('boite', 'macon')
