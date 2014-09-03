@@ -50,7 +50,7 @@ def cree_dico():
         pickle.dump(anag, f)
     return anag
 
-def lis_mots(infile):
+def lis_anag(infile):
     print('Début lecture')
     with open(infile) as f:
         anag = pickle.load(f)
@@ -61,11 +61,13 @@ def mots_from(mot):
     """renvoie la liste des mots relié à mot"""
     ch = tri(mot)
     s = set()
+    for le in letters :
+        s.add(tri(ch + le)) # ajoute
     for i, l in enumerate(ch) :
-        s.add(ch[:i] + ch[i+1:]) # enlève letters
+        base = ch[:i] + ch[i+1:] # enlève lettre
+        s.add(base) # enlève lettre
         for le in letters :
-            s.add(tri(ch[:i] + le + ch[i+1:])) # substitue
-            s.add(tri(ch + le)) # ajoute
+            s.add(tri(base + le)) # substitue
     return chain(*(anag.get(ch, []) for ch in s))
 
 def expand(G, curr, cible, atteint=True, explore=False):
@@ -137,15 +139,22 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
             break
     # indique les différents chemins
     if flag :
-        for p in nx.all_shortest_paths(G,source=debut,target=fin):
-            print(p)
+        print('Les 25 premières solutions :')
+        for i, p in enumerate(nx.all_shortest_paths(G,source=debut,target=fin)):
+            if i < 25:
+                print(p)
+        print('Nombre total de solutions :', i+1)
+
     else:
         print("Pas de chemin trouvé")
 
 if __name__ == '__main__':
-    #anag = cree_dico()
-    anag = lis_mots('gut.pickle')
-    G = nx.Graph()
-    cherche(G, 'ire', 'hydrotherapique', max_loop=31, opti=4)
+    anag = lis_anag("gut.pickle")
+    #cherche(G, 'ire', 'hydrotherapique', max_loop=30, opti=4)
     ###cherche(G, 'toiture', 'abricot', opti=2)
-    ###cherche(G, 'boite', 'macon', opti=2)
+    #anag = cree_anag("lmots.txt", "lmots.pickle")
+    #cherche(G, 'boite', 'maison', opti=2)
+    G = nx.Graph()
+    cherche(G, 'stylo', 'zoulou', opti=2)
+    G = nx.Graph()
+    cherche(G, 'alphabet', 'mathematiques', opti=2)
