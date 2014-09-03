@@ -6,6 +6,7 @@ import string
 from itertools import chain
 import networkx as nx
 import cPickle as pickle
+import Levenshtein
 
 letters = list(string.ascii_lowercase)
 
@@ -17,27 +18,8 @@ def leven(word1,word2):
     """Calcul de la distance de Levenshtein entre 2 mots"""
     word1 = tri(word1)
     word2 = tri(word2)
-    d = []
-    for i in range(len(word1)+1):
-        d.append([])
-        for j in range(len(word2)+1):
-            if i == 0:
-                d[i].append(j)
-            elif j == 0:
-                d[i].append(i)
-            else:
-                if word1[i-1] == word2[j-1]:
-                    cost = 0
-                else:
-                    cost = 1
-                d[i].append(
-                    min([
-                        d[i-1][j]+1,
-                        d[i][j-1]+1,
-                        d[i-1][j-1]+cost
-                    ])
-                )
-    return d[-1][-1]
+    return Levenshtein.distance(word1, word2)
+
 
 def tri(s) :
     """ Renvoit le mot trié pour repérage anagramme """
@@ -68,9 +50,9 @@ def cree_dico():
         pickle.dump(anag, f)
     return anag
 
-def lis_mots():
+def lis_mots(infile):
     print('Début lecture')
-    with open("gut.pickle") as f:
+    with open(infile) as f:
         anag = pickle.load(f)
     print('Fin lecture')
     return anag
@@ -161,9 +143,9 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
         print("Pas de chemin trouvé")
 
 if __name__ == '__main__':
-    anag = cree_dico()
-    #anag = lis_mots()
+    #anag = cree_dico()
+    anag = lis_mots('gut.pickle')
     G = nx.Graph()
-    cherche(G, 'ire', 'hydrotherapique')
+    cherche(G, 'ire', 'hydrotherapique', max_loop=31, opti=4)
     ###cherche(G, 'toiture', 'abricot', opti=2)
     ###cherche(G, 'boite', 'macon', opti=2)
