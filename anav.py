@@ -3,21 +3,22 @@
 
 from __future__ import division, print_function, absolute_import
 import string
+import random
 from itertools import chain
 import networkx as nx
-import cPickle as pickle
+import pickle
 import Levenshtein
 
 letters = list(string.ascii_lowercase)
 
 def out(G):
     for n in sorted(G) :
-        print(n, G.node[n])
+        print(n, G.nodes[n])
 
 def leven(word1,word2):
     """Calcul de la distance de Levenshtein entre 2 mots"""
-    word1 = tri(word1)
-    word2 = tri(word2)
+    #word1 = tri(word1)
+    #word2 = tri(word2)
     return Levenshtein.distance(word1, word2)
 
 
@@ -46,13 +47,13 @@ def cree_dico():
                 anag[tll].append(l)
     print('Fin lecture')
 
-    with open("gut.pickle", "w") as f:
+    with open("gut.pickle", "wb") as f:
         pickle.dump(anag, f)
     return anag
 
 def lis_anag(infile):
     print('Début lecture')
-    with open(infile) as f:
+    with open(infile, 'rb') as f:
         anag = pickle.load(f)
     print('Fin lecture')
     return anag
@@ -85,7 +86,7 @@ def expand(G, curr, cible, atteint=True, explore=False):
             dist = leven(cible, u)
             G.add_node(u, explore=explore, dist=dist, atteint=atteint)
         else :
-            G.node[u]['atteint'] = atteint
+            G.nodes[u]['atteint'] = atteint
         G.add_edge(curr, u)
 
 def analyse(G, fin, opti):
@@ -101,14 +102,14 @@ def analyse(G, fin, opti):
 
     min_dist = None
     if opti >= 0 :
-        min_dist = min([G.node[n]['dist'] for n in G if G.node[n]['atteint']])
+        min_dist = min([G.nodes[n]['dist'] for n in G if G.nodes[n]['atteint']])
         # les nodes trop lointains sont considérés comme déjà explorés
         for n in G:
-            if G.node[n]['dist'] > min_dist + opti :
-                G.node[n]['explore'] = True
+            if G.nodes[n]['dist'] > min_dist + opti :
+                G.nodes[n]['explore'] = True
 
     # constition de la liste des nodes non explorés, donc à explorer
-    nodes = [n for n in G if not G.node[n]['explore']]
+    nodes = [n for n in G if not G.nodes[n]['explore']]
     print('Analyse : ', len(nodes), 'nouveaux nodes à explorer - Distance mini :', min_dist)
     for node in nodes :
         expand(G, node, fin)
@@ -139,9 +140,11 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
             break
     # indique les différents chemins
     if flag :
-        print('Les 25 premières solutions :')
-        for i, p in enumerate(nx.all_shortest_paths(G,source=debut,target=fin)):
-            if i < 25:
+        print('100 solutions au hasard :')
+        sol = list(nx.all_shortest_paths(G,source=debut,target=fin))
+        random.shuffle(sol)
+        for i, p in enumerate(sol):
+            if i < 100:
                 print(p)
         print('Nombre total de solutions :', i+1)
 
@@ -149,12 +152,12 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
         print("Pas de chemin trouvé")
 
 if __name__ == '__main__':
+    # cree_dico()
     anag = lis_anag("gut.pickle")
-    #cherche(G, 'ire', 'hydrotherapique', max_loop=30, opti=4)
     ###cherche(G, 'toiture', 'abricot', opti=2)
     #anag = cree_anag("lmots.txt", "lmots.pickle")
     #cherche(G, 'boite', 'maison', opti=2)
     G = nx.Graph()
-    cherche(G, 'stylo', 'zoulou', opti=2)
-    G = nx.Graph()
-    cherche(G, 'alphabet', 'mathematiques', opti=2)
+    # cherche(G, 'stylo', 'zoulou', opti=2)
+    # cherche(G, 'ire', 'hydrotherapique', max_loop=30, opti=4)
+    cherche(G, 'vent', 'moulin', opti=2)
