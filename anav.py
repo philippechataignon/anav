@@ -26,7 +26,7 @@ def tri(s) :
     """ Renvoit le mot trié pour repérage anagramme """
     return "".join(sorted(list(s)))
 
-def cree_dico():
+def cree_anag(infile, outfile):
     """constitue dictionnaire des anagrammes depuis dico
 
     Le dictionnaire renvoyé est de la forme :
@@ -36,7 +36,7 @@ def cree_dico():
         Exemple : 'aimnos': ['aimons', 'amnios', 'maison']
     """
     print('Début lecture')
-    with open("gut.txt") as f:
+    with open(infile) as f:
         anag = {}
         for l in f:
             l = l.strip()
@@ -47,7 +47,7 @@ def cree_dico():
                 anag[tll].append(l)
     print('Fin lecture')
 
-    with open("gut.pickle", "wb") as f:
+    with open(outfile, "wb") as f:
         pickle.dump(anag, f)
     return anag
 
@@ -152,12 +152,11 @@ def cherche(G, debut, fin, max_loop=20, opti=-1):
         print("Pas de chemin trouvé")
 
 if __name__ == '__main__':
-    # cree_dico()
-    anag = lis_anag("gut.pickle")
-    ###cherche(G, 'toiture', 'abricot', opti=2)
     #anag = cree_anag("lmots.txt", "lmots.pickle")
-    #cherche(G, 'boite', 'maison', opti=2)
+    anag = lis_anag("lmots.pickle")
     G = nx.Graph()
-    # cherche(G, 'stylo', 'zoulou', opti=2)
+    ####cherche(G, 'toiture', 'abricot', opti=2)
+    ## cherche(G, 'pipo', 'squelette', opti=2)
+    ## cherche(G, 'stylo', 'zoulou', opti=2)
     # cherche(G, 'ire', 'hydrotherapique', max_loop=30, opti=4)
     cherche(G, 'vent', 'moulin', opti=2)
